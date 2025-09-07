@@ -223,19 +223,19 @@ end
 
 %%%%%%%%%%%%%%%% Resultados
 %% Tabela com resultados otimizados
-T = table({'Infinito'; 'Esta o 1'; 'Esta o 2'; 'Esta o 3'}, ...
+T = table({'Infinito'; 'Estacao 1'; 'Estacao 2'; 'Estacao 3'}, ...
     [mach_inicial_opt; M1_opt; M2_opt; M3_opt], ...
     [pinf_opt; p1_opt; p2_opt; p3_opt], ...
     [tempinf_opt; T1_opt; T2_opt; T3_opt], ...
     [vinf_opt; v1_opt; v2_opt; v3_opt], ...
     [densidade_inicial_opt; rhol_opt; rho2_opt; rho3_opt], ...
-    'VariableNames', {'Esta o', 'Mach', 'Press o [Pa]', 'Temperatura [K]', 'Velocidade [m/s]', 'Massa espec fica [Kg/m3]'});
+    'VariableNames', {'Estacao', 'Mach', 'Pressao [Pa]', 'Temperatura [K]', 'Velocidade [m/s]', 'Massa especifica [Kg/m3]'});
 disp('~~~~~~ Parte 1 ~~~~~~')
 disp('Propriedades Difusor:')
 disp(T)
 fprintf('Theta (graus): Theta_1:%.3f Theta_2:%.3f\n', theta_1_opt, theta_2_opt);
 fprintf('Beta (graus): Beta_1:%.3f; Beta_2:%.3f\n', betal_opt, beta2_opt);
-fprintf('Efici ncia [%%]: %.3f \n', max_eff*100);
+fprintf('Eficiencia [%%]: %.3f \n', max_eff*100);
 fprintf('Arrasto [N]: %.3f \n', D);
 
 % Cria o do gr fico de efic ncia
@@ -260,7 +260,7 @@ hold off
 x = [1 2 3 4];
 figure (2)
 plot(x, numero_mach, '-o', 'Color', [0, 0, 0]);
-names = {'Esta o Inf'; 'Esta o 1'; 'Esta o 2'; 'Esta o 3'};
+names = {'Estacao Inf'; 'Estacao 1'; 'Estacao 2'; 'Estacao 3'};
 set (gca, 'xtick', 1:4, 'xticklabel', names)
 grid on
 
@@ -271,8 +271,8 @@ addaxis (x, rho, '-d', 'Color', [0 0.4470 0.7410]);
 addaxis(x, temperature, '-^', 'Color', [0, 0.3922, 0]);
 addaxislabel (1, 'Mach');
 addaxislabel (2, 'Velocidade [m/s]');
-addaxislabel (3, 'Press o [Pa]');
-addaxislabel (4, 'Massa espec fica [kg/m3]');
+addaxislabel (3, 'Pressao [Pa]');
+addaxislabel (4, 'Massa especifica [kg/m3]');
 addaxislabel (5, 'Temperatura [K]');
 
 % Deixar o fundo da legenda trasnparente
