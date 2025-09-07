@@ -8,53 +8,53 @@ clc;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Parte 1 - Difusor
 %%%%%%%%%%%%%% Parametros de entrada
 
-M_inf = 2.5; % Mach
-p_inf = 101325; % [Pa]
-T_inf = 288.16; % [K]
-rho_inf = 1.225; % [kg/m3]
+mach_inicial = 3; % Mach
+pressao_inicial = 54048; % [Pa]
+temperatura_inicial = 255.69; % [K]
+densidade_inicial = 0.73643; % [kg/m3]
 gamma = 1.4;
 R = 287; % [J/kgK]
-L_1 = 49.53e-3; %Comprimento esta o 1 [m]
-L_2 = 31.73e-3; %Comprimento esta o 2 [m]
+L_1 = 49.53e-3; %Comprimento estação 1 [m]
+L_2 = 31.73e-3; %Comprimento estação 2 [m]
 
 % Velocidade do som [m/s]
-a_inf = (gamma * R * T_inf)^(1/2); 
+velsom_inicial = (gamma * R * temperatura_inicial)^(1/2); 
 
 % Pressao total
-P0_inf = p_inf * (1+((gamma - 1) /2) * M_inf^2)^(gamma/(gamma - 1));
+pressaotot_inicial = pressao_inicial * (1+((gamma - 1) /2) * mach_inicial^2)^(gamma/(gamma - 1));
 
 % Velocidade [m/s]
-V_inf = M_inf * a_inf;
+veltotal_inicial = mach_inicial * velsom_inicial;
 cp = (gamma * R)/(gamma - 1);
 
 %%%%%%%%%%%%%%%%%% Valores apos a primeira onda de choque (obliqua)
 max_eff = 0;
 i = 0;
 for b_1 = 1:1:89
-    theta_1 = atand (2 * cotd (b_1)*(((M_inf^2) * (sind(b_1)^2) - 1) / ...
-    ((M_inf^2) * (gamma + cosd (2* b_1)) + 2)));
+    theta_1 = atand (2 * cotd (b_1)*(((mach_inicial^2) * (sind(b_1)^2) - 1) / ...
+    ((mach_inicial^2) * (gamma + cosd (2* b_1)) + 2)));
 
     % Mn = Mach normal
-    Mn_inf = M_inf * sind (b_1);
+    Mn_inf = mach_inicial * sind (b_1);
     Mn_1 = sqrt ((Mn_inf^2 + (2/(gamma-1)))/((((2* gamma)/(gamma - 1)) *Mn_inf ^2)-1));
 
     % Razao de pressoes
     p_r1 = 1 + ((2 * gamma) / (gamma + 1)) * ((Mn_inf^2) - 1);
 
     % Pressao
-    p_1 = p_r1 * p_inf;
+    p_1 = p_r1 * pressao_inicial;
 
     % Razão de massa especifica
     rho_r1 = ((gamma + 1) * (Mn_inf^2)) / (2 + (gamma - 1) * (Mn_inf^2));
 
     % Massa especifica
-    rho_1 = rho_r1 * rho_inf;
+    rho_1 = rho_r1 * densidade_inicial;
 
     % Razao de temperaturas
     T_r1 = p_r1 / rho_r1;
 
     % Temperatura
-    T_1 = T_r1 * T_inf;
+    T_1 = T_r1 * temperatura_inicial;
 
     % Numero de Mach
     M_1 = Mn_1 / sind (b_1 - theta_1);
@@ -71,8 +71,8 @@ for b_1 = 1:1:89
 
     %%%%%%%%%%%%%%%%%% Valores apos segunda onda de choque (obliqua)
     for b_2 = 1:1:89
-        % Verificar se M1 real e menor que M_inf
-        if isreal (M_1) == false && M_1 > M_inf
+        % Verificar se M1 real e menor que mach_inicial
+        if isreal (M_1) == false && M_1 > mach_inicial
             continue
         end
         theta_2 = atand ((2 * cotd (b_2) * (((M_1^2) *sind (b_2)^2) - 1))/((M_1 ^2) * (gamma + cosd (2*b_2)) + 2));
@@ -194,7 +194,7 @@ for b_1 = 1:1:89
 
         %%%%%%%%%%%%%%%%%% Otimiza
         if global_eff > max_eff
-            if M_1 < M_inf && M_2 < M_1 && M_3 < M_2 && M_3 <= 1
+            if M_1 < mach_inicial && M_2 < M_1 && M_3 < M_2 && M_3 <= 1
                 max_eff = global_eff; % Efici neia total
                 deltas_2_max = deltas_2;
                 angulo_theta = [theta_1 theta_2 theta_3]; % Theta optimum
@@ -202,18 +202,18 @@ for b_1 = 1:1:89
                 theta_3_opt = theta_3;
                 angulo_beta = [b_1 b_2 b_3]; % Beta optimum
                 betal_opt = b_1; beta2_opt = b_2; beta3_opt = b_3;
-                numero_mach = [M_inf M_1 M_2 M_3]; % Mach optimum
-                M_inf_opt = M_inf; M1_opt = M_1; M2_opt = M_2; M3_opt = M_3;
-                rho = [rho_inf rho_1 rho_2 rho_3]; % Massa espec fica (optimum)
-                rho_inf_opt = rho_inf; rhol_opt = rho_1; rho2_opt = rho_2; rho3_opt = rho_3;
-                pressure = [p_inf p_1 p_2 p_3]; % Presso (optimum)
-                pinf_opt = p_inf; p1_opt = p_1; p2_opt = p_2; p3_opt = p_3;
-                temperature = [T_inf T_1 T_2 T_3]; % Temperatura (optimum)
-                tempinf_opt = T_inf; T1_opt = T_1; T2_opt = T_2; T3_opt = T_3;
-                fluid_velocity = [V_inf v_1 V_2 v_3]; % Velocidade do escoamento (optimum)
-                vinf_opt = V_inf; v1_opt = v_1; v2_opt = V_2; v3_opt = v_3;
-                velocity_sound = [a_inf a_1 a_2 a_3]; % Velocidade do som (optimum)
-                ainf_opt = a_inf; a1_opt = a_1; a2_opt = a_2; a3_opt = a_3;
+                numero_mach = [mach_inicial M_1 M_2 M_3]; % Mach optimum
+                mach_inicial_opt = mach_inicial; M1_opt = M_1; M2_opt = M_2; M3_opt = M_3;
+                rho = [densidade_inicial rho_1 rho_2 rho_3]; % Massa espec fica (optimum)
+                densidade_inicial_opt = densidade_inicial; rhol_opt = rho_1; rho2_opt = rho_2; rho3_opt = rho_3;
+                pressure = [pressao_inicial p_1 p_2 p_3]; % Presso (optimum)
+                pinf_opt = pressao_inicial; p1_opt = p_1; p2_opt = p_2; p3_opt = p_3;
+                temperature = [temperatura_inicial T_1 T_2 T_3]; % Temperatura (optimum)
+                tempinf_opt = temperatura_inicial; T1_opt = T_1; T2_opt = T_2; T3_opt = T_3;
+                fluid_velocity = [veltotal_inicial v_1 V_2 v_3]; % Velocidade do escoamento (optimum)
+                vinf_opt = veltotal_inicial; v1_opt = v_1; v2_opt = V_2; v3_opt = v_3;
+                velocity_sound = [velsom_inicial a_1 a_2 a_3]; % Velocidade do som (optimum)
+                ainf_opt = velsom_inicial; a1_opt = a_1; a2_opt = a_2; a3_opt = a_3;
                 PO = [0 eff_1 eff_2 eff_3];
                 D = ((p_2-p_1)*L_1*sind (theta_1))+((p_3-p_1) *L_2 *sind(theta_1_opt+theta_2)); % Arrasto [N]
             end
@@ -224,11 +224,11 @@ end
 %%%%%%%%%%%%%%%% Resultados
 %% Tabela com resultados otimizados
 T = table({'Infinito'; 'Esta o 1'; 'Esta o 2'; 'Esta o 3'}, ...
-    [M_inf_opt; M1_opt; M2_opt; M3_opt], ...
+    [mach_inicial_opt; M1_opt; M2_opt; M3_opt], ...
     [pinf_opt; p1_opt; p2_opt; p3_opt], ...
     [tempinf_opt; T1_opt; T2_opt; T3_opt], ...
     [vinf_opt; v1_opt; v2_opt; v3_opt], ...
-    [rho_inf_opt; rhol_opt; rho2_opt; rho3_opt], ...
+    [densidade_inicial_opt; rhol_opt; rho2_opt; rho3_opt], ...
     'VariableNames', {'Esta o', 'Mach', 'Press o [Pa]', 'Temperatura [K]', 'Velocidade [m/s]', 'Massa espec fica [Kg/m3]'});
 disp('~~~~~~ Parte 1 ~~~~~~')
 disp('Propriedades Difusor:')
