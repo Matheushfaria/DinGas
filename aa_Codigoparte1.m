@@ -195,27 +195,47 @@ for b_1 = 1:1:89
         %%%%%%%%%%%%%%%%%% Otimiza
         if global_eff > max_eff
             if M_1 < mach_inicial && M_2 < M_1 && M_3 < M_2 && M_3 <= 1
-                max_eff = global_eff; % Efici neia total
+
+                % Eficiência total
+                max_eff = global_eff;
                 deltas_2_max = deltas_2;
-                angulo_theta = [theta_1 theta_2 theta_3]; % Theta optimum
+
+                % Theta optimum
+                angulo_theta = [theta_1 theta_2 theta_3];
                 theta_1_opt = theta_1; theta_2_opt = theta_2;
                 theta_3_opt = theta_3;
-                angulo_beta = [b_1 b_2 b_3]; % Beta optimum
+
+                % Beta optimum
+                angulo_beta = [b_1 b_2 b_3];
                 betal_opt = b_1; beta2_opt = b_2; beta3_opt = b_3;
-                numero_mach = [mach_inicial M_1 M_2 M_3]; % Mach optimum
+
+                % Mach optimum
+                numero_mach = [mach_inicial M_1 M_2 M_3];
                 mach_inicial_opt = mach_inicial; M1_opt = M_1; M2_opt = M_2; M3_opt = M_3;
-                rho = [densidade_inicial rho_1 rho_2 rho_3]; % Massa espec fica (optimum)
+
+                % Massa especifica (optimum)
+                rho = [densidade_inicial rho_1 rho_2 rho_3];
                 densidade_inicial_opt = densidade_inicial; rhol_opt = rho_1; rho2_opt = rho_2; rho3_opt = rho_3;
-                pressure = [pressao_inicial p_1 p_2 p_3]; % Presso (optimum)
+
+                % Pressao (optimum)
+                pressure = [pressao_inicial p_1 p_2 p_3];
                 pinf_opt = pressao_inicial; p1_opt = p_1; p2_opt = p_2; p3_opt = p_3;
-                temperature = [temperatura_inicial T_1 T_2 T_3]; % Temperatura (optimum)
+
+                % Temperatura (optimum)
+                temperature = [temperatura_inicial T_1 T_2 T_3];
                 tempinf_opt = temperatura_inicial; T1_opt = T_1; T2_opt = T_2; T3_opt = T_3;
-                fluid_velocity = [veltotal_inicial v_1 V_2 v_3]; % Velocidade do escoamento (optimum)
+
+                % Velocidade do escoamento (optimum)
+                fluid_velocity = [veltotal_inicial v_1 V_2 v_3];
                 vinf_opt = veltotal_inicial; v1_opt = v_1; v2_opt = V_2; v3_opt = v_3;
-                velocity_sound = [velsom_inicial a_1 a_2 a_3]; % Velocidade do som (optimum)
+
+                % Velocidade do som (optimum)
+                velocity_sound = [velsom_inicial a_1 a_2 a_3];
                 ainf_opt = velsom_inicial; a1_opt = a_1; a2_opt = a_2; a3_opt = a_3;
                 PO = [0 eff_1 eff_2 eff_3];
-                D = ((p_2-p_1)*L_1*sind (theta_1))+((p_3-p_1) *L_2 *sind(theta_1_opt+theta_2)); % Arrasto [N]
+
+                % Arrasto [N]
+                D = ((p_2-p_1)*L_1*sind (theta_1))+((p_3-p_1) *L_2 *sind(theta_1_opt+theta_2));
             end
         end
     end
