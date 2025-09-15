@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 from scipy.optimize import minimize
 from scipy.interpolate import griddata
 
@@ -102,9 +103,11 @@ def calculate_properties(beta_angles, params):
         props['V_2'] = props['M_2'] * (gamma * R * props['T_2'])**0.5
         props['v_3'] = props['M_3'] * (gamma * R * props['T_3'])**0.5
         
-        # Arrasto
-        props['D'] = ((props['p_2'] - props['p_1']) * L_1 * np.sin(np.deg2rad(props['theta_1']))) + \
-                     ((props['p_3'] - props['p_1']) * L_2 * np.sin(np.deg2rad(props['theta_1'] + props['theta_2'])))
+        # to
+        # Pressões estão em kPa, L em m. Resultado seria em kN/m. Multiplicar por 1e3 para converter para N/m.
+        # Assumindo que o resultado final do arrasto deve ser em Newtons (por unidade de largura).
+        props['D'] = (((props['p_2'] - props['p_1']) * L_1 * np.sin(np.deg2rad(props['theta_1']))) + \
+                     ((props['p_3'] - props['p_1']) * L_2 * np.sin(np.deg2rad(props['theta_1'] + props['theta_2'])))) * 1e3
 
         if not np.isreal(global_eff) or not np.isreal(props['D']):
             return -1e6, None
@@ -161,7 +164,7 @@ def generate_contour_data(params):
                     thetal_v.append(props['theta_1'])
                     theta2_v.append(props['theta_2'])
                     eff_v.append(eff)
-    print("--- Geração de dados concluída. ---")
+    #print("--- Geração de dados concluída. ---")
     return thetal_v, theta2_v, eff_v
 
 def main():
@@ -173,7 +176,7 @@ def main():
     # %%%%%%%%%%%%%% Parametros de entrada
     params = {
         'mach_inicial': 3.0,
-        'pressao_inicial': 54048.0,
+        'pressao_inicial': 54048.0 / 1e3, # Convertido para kPa
         'temperatura_inicial': 255.69,
         'densidade_inicial': 0.73643,
         'gamma': 1.4,
@@ -190,7 +193,7 @@ def main():
     # Define o dicionário de restrições para o otimizador
     cons = ({'type': 'ineq', 'fun': constraints, 'args': (params,)})
 
-    print("--- Iniciando Otimização por Gradiente ---")
+    #print("--- Iniciando Otimização por Gradiente ---")
     result = minimize(
         objective_function, 
         b0, 
@@ -200,7 +203,7 @@ def main():
         constraints=cons,
         options={'disp': True, 'ftol': 1e-9}
     )
-    print("--- Otimização Concluída ---")
+    #print("--- Otimização Concluída ---")
 
     # --- Resultados ---
     if result.success:
@@ -214,13 +217,16 @@ def main():
         tabela_data = {
             'Estacao': ['Infinito', 'Estacao 1', 'Estacao 2', 'Estacao 3'],
             'Mach': [params['mach_inicial'], opt_vars['M_1'], opt_vars['M_2'], opt_vars['M_3']],
-            'Pressao [Pa]': [params['pressao_inicial'], opt_vars['p_1'], opt_vars['p_2'], opt_vars['p_3']],
+            'Pressao [kPa]': [params['pressao_inicial'], opt_vars['p_1'], opt_vars['p_2'], opt_vars['p_3']],
             'Temperatura [K]': [params['temperatura_inicial'], opt_vars['T_1'], opt_vars['T_2'], opt_vars['T_3']],
             'Velocidade [m/s]': [opt_vars['veltotal_inicial'], opt_vars['v_1'], opt_vars['V_2'], opt_vars['v_3']],
             'Massa especifica [Kg/m3]': [params['densidade_inicial'], opt_vars['rho_1'], opt_vars['rho_2'], opt_vars['rho_3']]
         }
         T = pd.DataFrame(tabela_data)
-        print(T.to_string())
+
+        # Format DataFrame display: 3 decimal places
+        with pd.option_context('display.float_format', '{:,.3f}'.format):
+            print(T.to_string())
 
         print(f"\nTheta (graus): Theta_1:{opt_vars['theta_1']:.3f} Theta_2:{opt_vars['theta_2']:.3f}")
         print(f"Beta (graus): Beta_1:{b_opt[0]:.3f}; Beta_2:{b_opt[1]:.3f}")
@@ -239,9 +245,18 @@ def main():
             Zq = griddata((thetal_v, theta2_v), eff_v, (Xq, Yq), method='cubic')
             
             contour = ax1.contour(Xq, Yq, Zq, 20, cmap='jet')
-            fig1.colorbar(contour, ax=ax1, label=r'$\eta$')
-            
-            max_value_formatted = f'{max(eff_v):.3f}'
+
+            # formatter: 3 decimals or scientific when appropriate
+            def fmt_val(x, pos):
+                axabs = abs(x)
+                if axabs != 0 and (axabs >= 1e4 or axabs < 1e-3):
+                    return f"{x:.3e}"
+                return f"{x:.3f}"
+
+            cbar = fig1.colorbar(contour, ax=ax1, label=r'$\eta$')
+            cbar.formatter = mticker.FuncFormatter(fmt_val)
+            cbar.update_ticks()
+
             ax1.plot(opt_vars['theta_1'], opt_vars['theta_2'], 'r*', markersize=10, label=f'Ótimo ({max_eff:.3f})')
             ax1.text(opt_vars['theta_1'], opt_vars['theta_2'], f'  $\\eta_{{max}} = {max_eff:.3f}$', color='red')
 
@@ -283,7 +298,7 @@ def main():
         # --- Plotando os dados ---
         p1, = host2.plot(x, T['Temperatura [K]'], '-^', color=[0, 0.392, 0], label='Temperatura', drawstyle='steps-post')
         p2, = axes2["Mach"].plot(x, T['Mach'], '-o', color='black', label='Mach', drawstyle='steps-post')
-        p3, = axes2["Pressao"].plot(x, T['Pressao [Pa]'], '-s', color=[0.494, 0.184, 0.556], label='Pressao', drawstyle='steps-post')
+        p3, = axes2["Pressao"].plot(x, T['Pressao [kPa]'], '-s', color=[0.494, 0.184, 0.556], label='Pressao', drawstyle='steps-post')
 
         # --- Configuração dos eixos ---
         host2.set_xticks(x); host2.set_xticklabels(names); host2.set_xlim(0.5, 4.5)
@@ -296,16 +311,20 @@ def main():
         axes2["Mach"].tick_params(axis='y', colors=p2.get_color())  # <<< cor dos números
         axes2["Mach"].spines['left'].set_edgecolor(p2.get_color())  # <<< cor da linha do eixo
 
-        axes2["Pressao"].set_ylabel('Pressao [Pa]', color=p3.get_color())
+        axes2["Pressao"].set_ylabel('Pressao [kPa]', color=p3.get_color())
         axes2["Pressao"].tick_params(axis='y', colors=p3.get_color())  # <<< cor dos números
         axes2["Pressao"].spines['left'].set_edgecolor(p3.get_color())  # <<< cor da linha do eixo
+
+        # apply numeric formatter to y-axes (3 decimals / scientific)
+        fmt_func = mticker.FuncFormatter(fmt_val)
+        host2.yaxis.set_major_formatter(fmt_func)
+        axes2["Mach"].yaxis.set_major_formatter(fmt_func)
+        axes2["Pressao"].yaxis.set_major_formatter(fmt_func)
 
         # --- Estilo geral ---
         host2.legend(handles=[p1, p2, p3], loc='center left')
         host2.grid(True)
         fig2.suptitle('Propriedades Termodinâmicas nas Estações')
-
-        # --- Ajuste automático das margens ---
         fig2.tight_layout(rect=[0, 0, 1, 0.95])
 
         # --- Gráfico 3: Propriedades de Escoamento (Massa Específica, Velocidade) ---
@@ -333,12 +352,14 @@ def main():
         host3.set_ylabel('Massa especifica [kg/m3]', color=p4.get_color())
         axes3["Velocidade"].set_ylabel('Velocidade [m/s]', color=p5.get_color())
 
+        # apply numeric formatter to y-axes (3 decimals / scientific)
+        host3.yaxis.set_major_formatter(fmt_func)
+        axes3["Velocidade"].yaxis.set_major_formatter(fmt_func)
+
         # Estilo geral
         host3.legend(handles=[p4, p5], loc='center left')
         host3.grid(True)
         fig3.suptitle('Propriedades de Escoamento nas Estações')
-
-        # Ajuste automático das margens
         fig3.tight_layout(rect=[0, 0, 1, 0.95])
 
         plt.show()
